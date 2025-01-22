@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",                  // Define o padrão ECMAScript alvo
+    "module": "commonjs",             // Especifica o sistema de módulos
+    "esModuleInterop": true,          // Habilita interoperabilidade entre ES Modules e CommonJS
+    "outDir": "./dist",               // Diretório de saída para os arquivos compilados
+    "rootDir": "./src",               // Diretório raiz dos arquivos de entrada
+    "strict": true,                   // Habilita verificações estritas
+    "skipLibCheck": true              // Pula checagem de tipos em arquivos de declaração
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

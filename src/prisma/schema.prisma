@@ -1,0 +1,71 @@
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Cliente {
+  id             Int        @id @default(autoincrement())
+  nomeCompleto   String
+  cpf            String     @unique
+  dataNascimento DateTime
+  nomeMae        String
+  email          String
+  telefone       String
+  cep            String
+  observacoes    String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  anotacoes      Anotacao[]
+}
+
+model Empresa {
+  id                 Int        @id @default(autoincrement())
+  cnpj               String     @unique
+  razaoSocial        String
+  nomeFantasia       String
+  cep                String
+  endereco           String
+  bairro             String
+  cidade             String
+  estado             String
+  email              String
+  telefone           String
+  inscricaoEstadual  String?
+  inscricaoMunicipal String?
+  responsavel        String?
+  observacoes        String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  anotacoes          Anotacao[]
+}
+
+model Anotacao {
+  id             Int      @id @default(autoincrement())
+  clienteId      Int
+  empresaId      Int
+  produtoServico String
+  quantidade     Int
+  valorTotal     Decimal  @db.Decimal(10, 2)
+  dataVencimento DateTime
+  status         String   @default("Em aberto")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+}
+
+model Usuario {
+  id          Int      @id @default(autoincrement())
+  nomeUsuario String
+  email       String   @unique
+  senha       String
+  role        String   @default("User") // Prisma não suporta ENUM nativo em MySQL ainda, então usamos String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
