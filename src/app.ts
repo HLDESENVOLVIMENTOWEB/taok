@@ -10,13 +10,15 @@ const app = express();
 
 app.use(express.json());
 
-// Rotas protegidas (aplicando o middleware `authMiddleware`)
+// Rotas protegidas com autenticação
 app.use("/api/clientes", authMiddleware, clienteRoutes);
 app.use("/api/empresas", authMiddleware, empresaRoutes);
 app.use("/api/anotacoes", authMiddleware, anotacoesRoutes);
-app.use("/api/usuarios", authMiddleware, usuariosRoutes);
 
-// Rotas públicas
+// Rotas de usuários: remove o middleware para criação de usuário
+app.use("/api/usuarios", usuariosRoutes);
+
+// Rotas de autenticação
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 3000;
