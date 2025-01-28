@@ -4,6 +4,7 @@ import clienteRoutes from "./routes/clientes.routes";
 import empresaRoutes from "./routes/empresas.routes";
 import anotacoesRoutes from "./routes/anotacoes.routes";
 import usuariosRoutes from "./routes/usuarios.routes";
+import relatoriosRoutes from "./routes/relatorios.routes";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middleware/auth.middleware";
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use("/api/clientes", authMiddleware, clienteRoutes);
 app.use("/api/empresas", authMiddleware, empresaRoutes);
 app.use("/api/anotacoes", authMiddleware, anotacoesRoutes);
+app.use("/api/relatorios", authMiddleware, relatoriosRoutes);
 
 // Rotas de usuários: remove o middleware para criação de usuário
 app.use("/api/usuarios", usuariosRoutes);

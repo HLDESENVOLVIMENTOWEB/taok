@@ -3,9 +3,31 @@ import prisma from "../prisma/prisma"; // Certifique-se de que o Prisma está co
 
 // Obter todos os clientes
 export const getClientes = async (req: Request, res: Response): Promise<void> => {
+  const { page = 1, limit = 10 } = req.query; // Valores padrão: página 1, 10 registros por página
+
   try {
-    const clientes = await prisma.cliente.findMany();
-    res.status(200).json(clientes);
+    const pageNumber = parseInt(page as string, 10);
+    const pageSize = parseInt(limit as string, 10);
+
+    // Calcula o total de clientes
+    const totalClientes = await prisma.cliente.count();
+
+    // Busca os clientes com base na página e no limite
+    const clientes = await prisma.cliente.findMany({
+      skip: (pageNumber - 1) * pageSize,
+      take: pageSize,
+    });
+
+    // Retorna os resultados com informações de paginação
+    res.status(200).json({
+      clientes,
+      pagination: {
+        total: totalClientes,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(totalClientes / pageSize),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar clientes" });
   }

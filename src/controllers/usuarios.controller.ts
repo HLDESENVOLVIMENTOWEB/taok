@@ -4,14 +4,43 @@ import { hashPassword, comparePassword } from "../services/bcrypt.service";
 import { generateToken } from "../services/auth.service";
 
 // Obter todos os usuários
+// Obter todos os usuários com paginação
 export const getUsuarios = async (req: Request, res: Response): Promise<void> => {
+  const { page = 1, limit = 10 } = req.query;
+
+  // Convertendo os parâmetros de consulta para números
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+
+  if (isNaN(pageNumber) || isNaN(limitNumber) || pageNumber < 1 || limitNumber < 1) {
+    res.status(400).json({ error: "Parâmetros de paginação inválidos" });
+    return;
+  }
+
   try {
-    const usuarios = await prisma.usuario.findMany();
-    res.status(200).json(usuarios);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const usuarios = await prisma.usuario.findMany({
+      skip,
+      take: limitNumber,
+    });
+
+    const totalUsuarios = await prisma.usuario.count();
+
+    res.status(200).json({
+      data: usuarios,
+      meta: {
+        total: totalUsuarios,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: Math.ceil(totalUsuarios / limitNumber),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar usuários" });
   }
 };
+
 
 // Obter um usuário por ID
 export const getUsuarioById = async (req: Request, res: Response): Promise<void> => {

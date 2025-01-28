@@ -1,15 +1,61 @@
 import { Request, Response } from "express";
 import prisma from "../prisma/prisma"; // Certifique-se de que o prisma está importado corretamente
 
-// Obter todas as empresas
+
 export const getEmpresas = async (req: Request, res: Response): Promise<void> => {
+  const { page = 1, limit = 10 } = req.query; // Valores padrão: página 1, 10 registros por página
+
   try {
-    const empresas = await prisma.empresa.findMany();
-    res.status(200).json(empresas);
+    const pageNumber = parseInt(page as string, 10);
+    const pageSize = parseInt(limit as string, 10);
+
+    // Calcula o total de empresas
+    const totalEmpresas = await prisma.empresa.count();
+
+    // Busca as empresas com base na página e no limite
+    const empresas = await prisma.empresa.findMany({
+      skip: (pageNumber - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        nomeFantasia: true,
+        email: true,
+        telefone: true,
+        cnpj: true,
+        endereco: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Formata a resposta no padrão solicitado
+    const data = empresas.map((empresa) => ({
+      id: empresa.id,
+      nomeEmpresa: empresa.nomeFantasia,
+      email: empresa.email,
+      telefone: empresa.telefone,
+      cnpj: empresa.cnpj,
+      endereco: empresa.endereco,
+      createdAt: empresa.createdAt,
+      updatedAt: empresa.updatedAt,
+    }));
+
+    // Retorna os resultados com informações adicionais sobre a paginação
+    res.status(200).json({
+      data,
+      meta: {
+        total: totalEmpresas,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(totalEmpresas / pageSize),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar empresas" });
   }
 };
+
+
 
 // Obter uma empresa por ID
 export const getEmpresaById = async (req: Request, res: Response): Promise<void> => {

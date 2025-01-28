@@ -3,18 +3,40 @@ import prisma from "../prisma/prisma";
 
 // Obter todas as anotações
 export const getAnotacoes = async (req: Request, res: Response): Promise<void> => {
+  const { page = 1, limit = 10 } = req.query; // Valores padrão: página 1, 10 registros por página
+
   try {
+    const pageNumber = parseInt(page as string, 10);
+    const pageSize = parseInt(limit as string, 10);
+
+    // Calcula o total de anotações
+    const totalAnotacoes = await prisma.anotacao.count();
+
+    // Busca as anotações com base na página e no limite
     const anotacoes = await prisma.anotacao.findMany({
+      skip: (pageNumber - 1) * pageSize,
+      take: pageSize,
       include: {
         cliente: true,
         empresa: true,
       },
     });
-    res.status(200).json(anotacoes);
+
+    // Retorna os resultados com informações de paginação
+    res.status(200).json({
+      data: anotacoes,
+      pagination: {
+        total: totalAnotacoes,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(totalAnotacoes / pageSize),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar anotações" });
   }
 };
+
 
 // Obter uma anotação por ID
 export const getAnotacaoById = async (req: Request, res: Response): Promise<void> => {
