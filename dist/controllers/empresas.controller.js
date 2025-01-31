@@ -14,11 +14,49 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteEmpresa = exports.updateEmpresa = exports.createEmpresa = exports.getEmpresaById = exports.getEmpresas = void 0;
 const prisma_1 = __importDefault(require("../prisma/prisma")); // Certifique-se de que o prisma está importado corretamente
-// Obter todas as empresas
 const getEmpresas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { page = 1, limit = 10 } = req.query; // Valores padrão: página 1, 10 registros por página
     try {
-        const empresas = yield prisma_1.default.empresa.findMany();
-        res.status(200).json(empresas);
+        const pageNumber = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        // Calcula o total de empresas
+        const totalEmpresas = yield prisma_1.default.empresa.count();
+        // Busca as empresas com base na página e no limite
+        const empresas = yield prisma_1.default.empresa.findMany({
+            skip: (pageNumber - 1) * pageSize,
+            take: pageSize,
+            select: {
+                id: true,
+                nomeFantasia: true,
+                email: true,
+                telefone: true,
+                cnpj: true,
+                endereco: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+        // Formata a resposta no padrão solicitado
+        const data = empresas.map((empresa) => ({
+            id: empresa.id,
+            nomeEmpresa: empresa.nomeFantasia,
+            email: empresa.email,
+            telefone: empresa.telefone,
+            cnpj: empresa.cnpj,
+            endereco: empresa.endereco,
+            createdAt: empresa.createdAt,
+            updatedAt: empresa.updatedAt,
+        }));
+        // Retorna os resultados com informações adicionais sobre a paginação
+        res.status(200).json({
+            data,
+            meta: {
+                total: totalEmpresas,
+                page: pageNumber,
+                limit: pageSize,
+                totalPages: Math.ceil(totalEmpresas / pageSize),
+            },
+        });
     }
     catch (error) {
         res.status(500).json({ error: "Erro ao buscar empresas" });

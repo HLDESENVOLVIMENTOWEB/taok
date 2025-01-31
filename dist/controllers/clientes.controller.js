@@ -16,9 +16,27 @@ exports.deleteCliente = exports.updateCliente = exports.createCliente = exports.
 const prisma_1 = __importDefault(require("../prisma/prisma")); // Certifique-se de que o Prisma está configurado corretamente
 // Obter todos os clientes
 const getClientes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { page = 1, limit = 10 } = req.query; // Valores padrão: página 1, 10 registros por página
     try {
-        const clientes = yield prisma_1.default.cliente.findMany();
-        res.status(200).json(clientes);
+        const pageNumber = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        // Calcula o total de clientes
+        const totalClientes = yield prisma_1.default.cliente.count();
+        // Busca os clientes com base na página e no limite
+        const clientes = yield prisma_1.default.cliente.findMany({
+            skip: (pageNumber - 1) * pageSize,
+            take: pageSize,
+        });
+        // Retorna os resultados com informações de paginação
+        res.status(200).json({
+            clientes,
+            pagination: {
+                total: totalClientes,
+                page: pageNumber,
+                limit: pageSize,
+                totalPages: Math.ceil(totalClientes / pageSize),
+            },
+        });
     }
     catch (error) {
         res.status(500).json({ error: "Erro ao buscar clientes" });

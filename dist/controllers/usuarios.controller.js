@@ -28,10 +28,32 @@ const prisma_1 = __importDefault(require("../prisma/prisma"));
 const bcrypt_service_1 = require("../services/bcrypt.service");
 const auth_service_1 = require("../services/auth.service");
 // Obter todos os usuários
+// Obter todos os usuários com paginação
 const getUsuarios = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { page = 1, limit = 10 } = req.query;
+    // Convertendo os parâmetros de consulta para números
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    if (isNaN(pageNumber) || isNaN(limitNumber) || pageNumber < 1 || limitNumber < 1) {
+        res.status(400).json({ error: "Parâmetros de paginação inválidos" });
+        return;
+    }
     try {
-        const usuarios = yield prisma_1.default.usuario.findMany();
-        res.status(200).json(usuarios);
+        const skip = (pageNumber - 1) * limitNumber;
+        const usuarios = yield prisma_1.default.usuario.findMany({
+            skip,
+            take: limitNumber,
+        });
+        const totalUsuarios = yield prisma_1.default.usuario.count();
+        res.status(200).json({
+            data: usuarios,
+            meta: {
+                total: totalUsuarios,
+                page: pageNumber,
+                limit: limitNumber,
+                totalPages: Math.ceil(totalUsuarios / limitNumber),
+            },
+        });
     }
     catch (error) {
         res.status(500).json({ error: "Erro ao buscar usuários" });
